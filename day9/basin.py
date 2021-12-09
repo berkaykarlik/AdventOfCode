@@ -1,6 +1,6 @@
 from pathlib import Path
 
-input_file_path = Path("test.txt")
+input_file_path = Path("input.txt")
 input_str = input_file_path.read_text()
 input_str = input_str.split("\n")
 
@@ -33,8 +33,36 @@ for j in col_range:
             low_point.append((i,j))
             risk_level_sum += height +1
 
+print("points")
+for point in low_point:
+    print(point)
 
-# for point in low_point:
-#     print(point)
+print("total risk level: ",risk_level_sum)
 
-print(risk_level_sum)
+
+def discover_basin(x,y):
+    """recursive function to discover basin starting from lowest point of it"""
+    height = ground_map[y][x]
+    basin = []
+    basin.append((x,y))
+    for x,y in [(x-1,y),(x+1,y),(x,y-1),(x,y+1)]:
+            if y in col_range and x in row_range:
+                neighbour_height = ground_map[y][x]
+                if neighbour_height == 9:
+                    continue
+                if neighbour_height > height:
+                    basin += discover_basin(x,y)
+    return basin
+
+
+# print(discover_basin(2,2))
+
+sizes = []
+for point in low_point:
+    size = len(set(discover_basin(point[0],point[1])))
+    sizes.append(size)
+
+
+x1,x2,x3 =sorted(sizes)[-3:]
+
+print(x1*x2*x3)
