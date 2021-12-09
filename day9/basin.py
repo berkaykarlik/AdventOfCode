@@ -1,5 +1,5 @@
 from pathlib import Path
-
+from time import time
 input_file_path = Path("input.txt")
 input_str = input_file_path.read_text()
 input_str = input_str.split("\n")
@@ -33,36 +33,38 @@ for j in col_range:
             low_point.append((i,j))
             risk_level_sum += height +1
 
-print("points")
-for point in low_point:
-    print(point)
+print("PART1")
+# print("points")
+# for point in low_point:
+#     print(point)
 
 print("total risk level: ",risk_level_sum)
-
+print("PART2")
 
 def discover_basin(x,y):
     """recursive function to discover basin starting from lowest point of it"""
     height = ground_map[y][x]
     basin = []
     basin.append((x,y))
+    ground_map[y][x] = None #comment out this and below line to test non-dynamic approach 
     for x,y in [(x-1,y),(x+1,y),(x,y-1),(x,y+1)]:
             if y in col_range and x in row_range:
                 neighbour_height = ground_map[y][x]
-                if neighbour_height == 9:
+                if not neighbour_height  or neighbour_height == 9: #remove not neighbour_height  and above line to test non-dynamic approach 
                     continue
                 if neighbour_height > height:
                     basin += discover_basin(x,y)
     return basin
 
 
-# print(discover_basin(2,2))
-
 sizes = []
+t1 = time()
 for point in low_point:
     size = len(set(discover_basin(point[0],point[1])))
     sizes.append(size)
-
+t2 = time()
 
 x1,x2,x3 =sorted(sizes)[-3:]
 
 print(x1*x2*x3)
+print("time spent:",t2-t1) #to compare dynamic and non dynamic
