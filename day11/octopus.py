@@ -44,10 +44,19 @@ def step():
             if octopus_grid[y][x] > 9:
                 flash(y, x)
     flash_count += len(flashed)
+    if len(flashed) == width * height:  # part2
+        return True
+    return False
 
 
-for i in range(100):
-    step()
+# for i in range(100):
+#     step()
+# print(f'number of flashes after 100 steps: {flash_count}')
 
+step_count = 0
+while(True):
+    step_count += 1
+    if step():
+        break
 
-print(f'number of flashes after 100 steps: {flash_count}')
+print(f'synch at {step_count}')
