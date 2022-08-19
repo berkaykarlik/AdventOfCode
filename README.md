@@ -1,7 +1,6 @@
-# AdventOfCode21
+# AdventOfCode
 
-An attempt to [advent of code 2021](https://adventofcode.com/2021) in Python.
+My all attempts to AdventOfCode
 
-I will share my answers everyday.
-
-well, it got from 0 to 100 in a few days, we will get them next year!
+2021 - up to day 13, in python
+2022 - ??
