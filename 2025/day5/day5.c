@@ -18,10 +18,7 @@ void parse_file(char* filename, Range **ranges_p, long long **ids_p, int *ranges
 
     long long start = 0;
     long long end = 0;
-    // printf("reading ranges\n");
     while (fscanf(fptr, "%lld-%lld", &start, &end) == 2) {
-        // printf("start: %d\t end: %d\n", start, end);
-
         if((ranges_buffer_size - read_index) <= 0){
             ranges_buffer_size *= 2;
             Range *temp = realloc(*ranges_p,sizeof(Range) * ranges_buffer_size);
@@ -42,10 +39,7 @@ void parse_file(char* filename, Range **ranges_p, long long **ids_p, int *ranges
    read_index = 0;
 
    long long current_id = 0;
-    // printf("reading ids\n");
     while (fscanf(fptr, "%lld", &current_id) == 1) {
-        // printf("id:\t%d\n", current_id);
-
         if((ids_buffer_size - read_index) <= 0){
             ids_buffer_size *= 2;
             long long* temp = realloc(*ids_p,sizeof(long long) * ids_buffer_size);
@@ -70,6 +64,14 @@ int is_in_range(long long i, Range r){
     return 0;
 }
 
+int comp(const void* elem1, const void* elem2){
+    long long start1 = ((Range*)elem1)->start;
+    long long start2 = ((Range*)elem2)->start;
+    if (start1 > start2) return 1;
+    if (start1 < start2) return -1;
+    return 0;
+}
+
 int main(int argc, char** argv){
 
     long long *ids;
@@ -78,15 +80,9 @@ int main(int argc, char** argv){
     int fresh_ones = 0;
 
     parse_file(argv[1],&ranges,&ids, &ranges_size, &ids_size);
-    // printf("ranges_size %d \n", ranges_size);
 
-    // // verifying range parsing
-    // for (int i = 0; i < ranges_size; i ++){
-    //     printf("start: %d \tend %d\n", ranges[i].start, ranges[i].end);
-    // }
     //verfying ids parsing
     for (int i = 0; i < ids_size; i++){
-        // printf("id%d:\t %d\n",i, ids[i]);
         for (int j = 0; j < ranges_size; j ++){
             Range r = ranges[j];
             if (is_in_range(ids[i],r)){
@@ -95,8 +91,25 @@ int main(int argc, char** argv){
             }
         }
     }
-
     printf("Total fresh count %d\n",fresh_ones);
+
+    qsort(ranges, ranges_size, sizeof(Range), comp);
+
+    long long fresh_ones2 = 0;
+    long long last_num = 0;
+    for (int i = 0; i < ranges_size; i ++){
+        long long curr_range_start = last_num > ranges[i].start ? last_num : ranges[i].start;
+        long long curr_range_end = ranges[i].end;
+
+        if (curr_range_end >= curr_range_start)
+            fresh_ones2 += curr_range_end - curr_range_start + 1;
+
+        if (curr_range_end >= last_num)
+            last_num = curr_range_end+1;
+    }
+
+    printf("PART2 fresh count %lld\n",fresh_ones2);
+
 
     free(ranges);
     free(ids);
