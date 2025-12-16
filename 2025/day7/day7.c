@@ -15,34 +15,30 @@ typedef struct {
 } Point;
 
 
-int traverse_light(char (*grid)[MAX_LENGTH], int row_count, int col_count, Point curr, int *split_count){
-    if ((curr.x < row_count) && (curr.y < col_count)){
+int traverse_light(char (*grid)[MAX_LENGTH], int row_count, int col_count, Point curr){
+    if ((curr.x < row_count) && (curr.y < col_count) && (curr.y >= 0)){
         //propagate
         if(grid[curr.x][curr.y] == '.'){
-            grid[curr.x][curr.y] = '|';
             Point next = {.x=curr.x+1,.y=curr.y};
-            traverse_light(grid, row_count, col_count, next, split_count);
+            return traverse_light(grid, row_count, col_count, next);
         }
-
         //split
         if(grid[curr.x][curr.y] == '^'){
-            (*split_count)++;
+            int l = 0, r = 0;
             if (curr.y -1 > -1 ){
-                if(grid[curr.x][curr.y-1] != '|'){ // not already processed by another split
-                    grid[curr.x][curr.y-1] = '|';
-                    Point next = {.x=curr.x+1,.y=curr.y-1};
-                    traverse_light(grid, row_count, col_count, next, split_count);
-                }
+                Point next = {.x=curr.x+1,.y=curr.y-1};
+                l = traverse_light(grid, row_count, col_count, next);
             }
             if (curr.y +1 < col_count ){
-                if(grid[curr.x][curr.y+1] != '|'){ // not already processed by another split
-                    grid[curr.x][curr.y+1] = '|';
-                    Point next = {.x=curr.x+1,.y=curr.y+1};
-                    traverse_light(grid, row_count, col_count, next, split_count);
-                }
+                Point next = {.x=curr.x+1,.y=curr.y+1};
+                r = traverse_light(grid, row_count, col_count, next);
             }
+            return l + r;
         }
+        return 0;
     }
+    else
+        return 1;
 }
 
 
@@ -65,7 +61,7 @@ int main(int argc, char** argv) {
 
     int split_count = 0;
     Point start = {1, s_index};
-    traverse_light(grid, row_count, col_count, start, &split_count);
+    split_count = traverse_light(grid, row_count, col_count, start );
 
     for (int i = 0; i< row_count; i++)
         printf("%s", grid[i]);
