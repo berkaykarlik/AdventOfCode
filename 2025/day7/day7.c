@@ -27,7 +27,7 @@ int traverse_light(char (*grid)[MAX_LENGTH], int row_count, int col_count, Point
         //split
         if(grid[curr.x][curr.y] == '^'){
             (*split_count)++;
-            if (curr.y -1 > 0 ){
+            if (curr.y -1 > -1 ){
                 if(grid[curr.x][curr.y-1] != '|'){ // not already processed by another split
                     grid[curr.x][curr.y-1] = '|';
                     Point next = {.x=curr.x+1,.y=curr.y-1};
@@ -44,6 +44,7 @@ int traverse_light(char (*grid)[MAX_LENGTH], int row_count, int col_count, Point
         }
     }
 }
+
 
 int main(int argc, char** argv) {
     FILE *fptr = fopen(argv[1], "r");
