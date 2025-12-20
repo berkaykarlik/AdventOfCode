@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #define MAX_NUMBER_OF_POINTS 1000
-#define TARGET 1000 //question asks for 1000 closest
+#define TARGET MAX_NUMBER_OF_POINTS*MAX_NUMBER_OF_POINTS / 2 //for part 2 target is all connections / 2 to avoid duplicates
 
 typedef struct{
     long long x;
@@ -56,67 +57,38 @@ void unite(long long *parent, long long *size, long long a, long long b){
     size[a] += size[b];
 }
 
+int cmp(const void *a, const void *b) {
+    const Pair *pa = a;
+    const Pair *pb = b;
+    if (pa->distance < pb->distance) return -1;
+    if (pa->distance > pb->distance) return 1;
+    return 0;
+}
+
+
 
 int main(int argc, char** argv) {
     Point points[MAX_NUMBER_OF_POINTS];
     long long  points_size;
     parse_file(argv[1],&points, &points_size);
-    long long i = 0;
-    while (i < points_size){
-        Point t = points[i++];
-        printf("%lld,%lld,%lld\n",t.x,t.y,t.z);
-    }
 
-    //calculate 1000 closest and store them
-    Pair pairs[TARGET];
+    Pair *pairs = malloc(sizeof(Pair) * (points_size * (points_size - 1) / 2));
     long long pairs_size = 0;
 
-    Point curr_point;
-    Point compared_point;
-    long long dist;
-    Pair tmp;
-    for(long long i = 0; i < points_size; i++){
-        curr_point = points[i];
-        for(long long j = 0; j < i; j++){ //to avoid duplicate pairs i<j  should work??
-            compared_point = points[j];
-            dist = get_dist2(&curr_point, &compared_point);
-            tmp = (Pair){i,j,dist};
-
-            if (pairs_size == TARGET && dist >= pairs[TARGET-1].distance)
-                continue;
-            else{
-                //insert to appropriate place and then slide the rest
-                //find the element bigger then curr
-                long long k = 0;
-                for (; k < pairs_size; k++){
-                    if( tmp.distance < pairs[k].distance)
-                        break;
-                }
-                long long z = (pairs_size < TARGET) ? pairs_size : TARGET - 1;
-                for (; z > k; z--)
-                    pairs[z] = pairs[z - 1];
-                pairs[k] = tmp;
-                if (pairs_size < TARGET)
-                    pairs_size++;
-            }
+    for (long long i = 0; i < points_size; i++) {
+        for (long long j = 0; j < i; j++) {
+            pairs[pairs_size++] = (Pair){
+                .ip1 = i,
+                .ip2 = j,
+                .distance = get_dist2(&points[i], &points[j])
+            };
         }
     }
-
-    printf("ordered closest %d pairs of junkboxes\n", TARGET);
-    for (long long d = 0; d < pairs_size; d++) {
-    Pair p = pairs[d];
-    Point a = points[p.ip1];
-    Point b = points[p.ip2];
-
-    printf("  [%lld] P%lld=(%lld,%lld,%lld)  P%lld=(%lld,%lld,%lld)  dist2=%lld\n",
-           d,
-           p.ip1, a.x, a.y, a.z,
-           p.ip2, b.x, b.y, b.z,
-           p.distance);
-    }
+    qsort(pairs, pairs_size, sizeof(Pair), cmp);
 
     long long *parent = malloc(sizeof(long long)*points_size);
     long long *size = malloc(sizeof(long long)*points_size);
+    long long *circuit_sizes = calloc(points_size, sizeof(long long));
 
     //ever junctionbox is its own circuit at the beginning
     for(long long i = 0; i < points_size; i++){
@@ -125,39 +97,28 @@ int main(int argc, char** argv) {
     }
 
     for (long long i = 0; i < pairs_size; i++) {
-        unite(parent, size, pairs[i].ip1, pairs[i].ip2);
-    }
+        long long a = pairs[i].ip1;
+        long long b = pairs[i].ip2;
 
-    long long *circuit_sizes = calloc(points_size, sizeof(long long));
-    for (long long i = 0; i < points_size; i++) {
-        long long root = find(parent,i);
-        circuit_sizes[root]++;
-    }
+        long long ra = find(parent, a);
+        long long rb = find(parent, b);
 
-    long long max1 = 0, max2 = 0, max3 = 0;
+        if (ra != rb) {
+            unite(parent, size, ra, rb);
 
-    for (long long i = 0; i < points_size; i++) {
-        if (parent[i] == i && circuit_sizes[i] > 0) {
-            printf("circuit %lld has size %lld\n", i, circuit_sizes[i]);
-            long long s = circuit_sizes[i];
+            long long root = find(parent, ra);
+            if (size[root] == points_size) {
+                printf("last connection: (%lld,%lld,%lld) and (%lld,%lld,%lld)\n",
+                    points[a].x, points[a].y, points[a].z,
+                    points[b].x, points[b].y, points[b].z);
 
-            if (s > max1) {
-                max3 = max2;
-                max2 = max1;
-                max1 = s;
-            } else if (s > max2) {
-                max3 = max2;
-                max2 = s;
-            } else if (s > max3) {
-                max3 = s;
+                printf("answer = %lld\n", points[a].x * points[b].x);
+                break;
             }
         }
     }
 
-    printf("max sizes are %lld, %lld, %lld their product is: %lld\n", max1, max2, max3,(max1*max2*max3));
-
-
-
+    free(pairs);
     free(parent);
     free(size);
     free(circuit_sizes);
